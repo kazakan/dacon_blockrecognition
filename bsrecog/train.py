@@ -121,13 +121,13 @@ def main():
     parser.add_argument(
         "--cuda",
         default=False,
-        action=argparse.BooleanOptionalAction,
+        action='store_true',
         help="Use cuda or not",
     )
     parser.add_argument(
         "--debug",
         default=False,
-        action=argparse.BooleanOptionalAction,
+        action='store_true',
         help="Debug mode. In Debug mode, only small set of data is used to test whether program totally runs well.",
     )
 
