@@ -12,8 +12,9 @@ def seed_everything(seed=42):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = False
-    # torch.use_deterministic_algorithms(True)
+    torch.use_deterministic_algorithms(True)
     os.environ["PYTHONHASHSEED"] = str(seed)
+    os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 
 def seed_worker(_worker_id):

@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+
 import torch
 
 from bsrecog.dataset import prepare_dataloader
