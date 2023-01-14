@@ -50,15 +50,13 @@ class Trainer(object):
             raise Exception("train_dataset and test_dataset are both None.")
 
         if valid_interval is None:
-            self.valid_interval = len(train_dataloader.dataset)
+            self.valid_interval = len(train_dataloader)
         elif type(valid_interval) is float:
             assert valid_interval > 0 and valid_interval <= 1
-            self.valid_interval = int(len(train_dataloader.dataset) * valid_interval)
+            self.valid_interval = int(len(train_dataloader) * valid_interval)
             assert self.valid_interval >= 1
         elif type(valid_interval) is int:
-            assert (valid_interval > 0) and (
-                valid_interval <= len(train_dataloader.dataset)
-            )
+            assert (valid_interval > 0) and (valid_interval <= len(train_dataloader))
             self.valid_interval = valid_interval
         else:
             raise Exception(f"Wrong valid_interval type ({type(valid_interval)})")
@@ -116,7 +114,7 @@ class Trainer(object):
                 self.optimizer.step()
 
                 if (((idx + 1) % self.valid_interval) == 0) or (
-                    (idx + 1) == len(self.train_dataloader.dataset)
+                    (idx + 1) == len(self.train_dataloader)
                 ):
                     metric = self._validation(ckpt_dir_path, epoch, idx, best_metric)
 
