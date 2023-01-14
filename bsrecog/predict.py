@@ -62,11 +62,9 @@ def main():
     parser.add_argument("--batch-size", default=32, type=int)
 
     parser.add_argument("--seed", default=42, type=int)
-    parser.add_argument("--cuda", default=False, action='store_true')
+    parser.add_argument("--cuda", default=False, action="store_true")
 
-    parser.add_argument(
-        "--debug", default=False, type=bool, action='store_true'
-    )
+    parser.add_argument("--debug", default=False, type=bool, action="store_true")
 
     args = parser.parse_args()
 
