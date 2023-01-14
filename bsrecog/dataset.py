@@ -114,7 +114,7 @@ class BlendBackgroundTransform:
         ret[1, :, :] = torch.where(mask, ret[1, :, :], img[1, :, :])
         ret[2, :, :] = torch.where(mask, ret[2, :, :], img[2, :, :])
 
-        ret = transforms.GaussianBlur(3,1)(ret)
+        ret = transforms.GaussianBlur(3, 1)(ret)
 
         return ret
 
@@ -168,12 +168,16 @@ def prepare_dataloader(
 
     # test data
     if test_img_dir_path is not None:
-        test_dataset = BlockDataset(test_img_dir_path,transform=transforms.Compose(
-            [
-                transforms.Resize(img_size),
-                transforms.GaussianBlur(3, 2),
-            ]
-        ))
+        test_dataset = BlockDataset(
+            test_img_dir_path,
+            transform=transforms.Compose(
+                [
+                    transforms.Resize(img_size),
+                    transforms.GaussianBlur(3, 1),
+                    transforms.GaussianBlur(3, 2),
+                ]
+            ),
+        )
         if debug:
             test_dataset = Subset(test_dataset, list(range(batch_size * 2)))
 
@@ -201,7 +205,7 @@ if __name__ == "__main__":
 
     # seed_everything()
 
-    bg = StanfordBackgroundDataset("./data/bg",transform=transforms.Resize((256,256)))
+    bg = StanfordBackgroundDataset("./data/bg", transform=transforms.Resize((256, 256)))
 
     data = BlockDataset(
         "./data/train",
