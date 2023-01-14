@@ -46,22 +46,10 @@ class Trainer(object):
         self.valid_dataloader = valid_dataloader
         self.test_dataloader = test_dataloader
 
+        self.valid_interval = valid_interval
+
         if self.train_dataloader is None and self.test_dataloader is None:
             raise Exception("train_dataset and test_dataset are both None.")
-
-        if valid_interval is None:
-            self.valid_interval = len(train_dataloader)
-        elif type(valid_interval) is float:
-            assert valid_interval > 0 and valid_interval <= 1
-            self.valid_interval = int(len(train_dataloader) * valid_interval)
-            assert self.valid_interval >= 1
-        elif type(valid_interval) is int:
-            assert (valid_interval > 0) and (valid_interval <= len(train_dataloader))
-            self.valid_interval = valid_interval
-        else:
-            raise Exception(f"Wrong valid_interval type ({type(valid_interval)})")
-
-        print(self.valid_interval)
 
     def train(self):
         # seed all
@@ -84,6 +72,20 @@ class Trainer(object):
                 "self.optimizer is None. Somethingwent wrong in optimizer_initializer"
             )
 
+        # set validation interval
+        if self.valid_interval is None:
+            self.valid_interval = len(self.train_dataloader)
+        elif type(self.valid_interval) is float:
+            assert self.valid_interval > 0 and self.valid_interval <= 1
+            self.valid_interval = int(len(self.train_dataloader) * self.valid_interval)
+            assert self.valid_interval >= 1
+        elif type(self.valid_interval) is int:
+            assert (self.valid_interval > 0) and (
+                self.valid_interval <= len(self.train_dataloader)
+            )
+        else:
+            raise Exception(f"Wrong valid_interval type ({type(self.valid_interval)})")
+
         # check checkpoint directory path
         ckpt_dir_path = self.model_ckpt_root_path / self.name
         if not os.path.exists(ckpt_dir_path):
@@ -103,6 +105,7 @@ class Trainer(object):
         for epoch in range(self.max_epoch):
             self.model.train()
             for idx, (x, y) in enumerate(self.train_dataloader):
+                y = y.float()
                 if self.cuda:
                     x, y = x.cuda(), y.cuda()
                 self.optimizer.zero_grad()
@@ -161,7 +164,7 @@ class Trainer(object):
     def metrics(self, y_hat, y):
         ret = []
         for name, func in self.metric_funcs.items():
-            ret.append((name, func(y_hat, y)))
+            ret.append((name, func(y_hat, y).detach().cpu()))
         return ret
 
     def save_model(self, path, name):
@@ -172,16 +175,18 @@ class Trainer(object):
 
     def _validation(self, ckpt_dir_path, epoch, step, best_metric):
         if self.valid_dataloader is not None:
-            y_hats = []
-            ys = []
             self.model.eval()
             with torch.no_grad():
+                y_hats = []
+                ys = []
+
                 for idx, (x, y) in enumerate(self.valid_dataloader):
+                    y = y.float()
                     if self.cuda:
                         x, y = x.cuda(), y.cuda()
                     y_hat = self.model(x)
-                    y_hats.append(y_hat.detach().cpu())
-                    ys.append(y.detach().cpu())
+                    y_hats.append(y_hat)
+                    ys.append(y)
 
             val_y_hats, val_ys = torch.cat(y_hats, dim=0), torch.cat(ys, dim=0)
 
