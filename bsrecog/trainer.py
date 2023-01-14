@@ -2,11 +2,9 @@ import datetime
 import os
 from collections.abc import Callable
 from pathlib import Path
-from typing import Optional
 
 import torch
 import torch.nn as nn
-import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
@@ -21,10 +19,11 @@ class Trainer(object):
         valid_dataloader: DataLoader = None,
         test_dataloader: DataLoader = None,
         name: str = "experiment_name",
-        optimizer_initializer = None,
+        optimizer_initializer=None,
         loss_func: Callable = None,
-        metric_funcs= {},
+        metric_funcs={},
         max_epochs=100,
+        valid_interval=None,
         model_ckpt_root_path="./ckpts",
         seed=42,
         cuda=False,
@@ -50,6 +49,22 @@ class Trainer(object):
         if self.train_dataloader is None and self.test_dataloader is None:
             raise Exception("train_dataset and test_dataset are both None.")
 
+        if valid_interval is None:
+            self.valid_interval = len(train_dataloader.dataset)
+        elif type(valid_interval) is float:
+            assert valid_interval > 0 and valid_interval <= 1
+            self.valid_interval = int(len(train_dataloader.dataset) * valid_interval)
+            assert self.valid_interval >= 1
+        elif type(valid_interval) is int:
+            assert (valid_interval > 0) and (
+                valid_interval <= len(train_dataloader.dataset)
+            )
+            self.valid_interval = valid_interval
+        else:
+            raise Exception(f"Wrong valid_interval type ({type(valid_interval)})")
+
+        print(self.valid_interval)
+
     def train(self):
         # seed all
         seed_everything(self.seed)
@@ -70,9 +85,6 @@ class Trainer(object):
             raise Exception(
                 "self.optimizer is None. Somethingwent wrong in optimizer_initializer"
             )
-
-        # check validation is available
-        vaildation_available = self.valid_dataloader is not None
 
         # check checkpoint directory path
         ckpt_dir_path = self.model_ckpt_root_path / self.name
@@ -103,34 +115,22 @@ class Trainer(object):
                 loss.backward()
                 self.optimizer.step()
 
-            if self.lr_scheduler is not None:
-                self.lr_scheduler.step()
+                if (((idx + 1) % self.valid_interval) == 0) or (
+                    (idx + 1) == len(self.train_dataloader.dataset)
+                ):
+                    metric = self._validation(ckpt_dir_path, epoch, idx, best_metric)
 
-            if vaildation_available:
-                y_hats = []
-                ys = []
-                self.model.eval()
-                with torch.no_grad():
-                    for idx, (x, y) in enumerate(self.valid_dataloader):
-                        if self.cuda:
-                            x, y = x.cuda(), y.cuda()
-                        y_hat = self.model(x)
-                        y_hats.append(y_hat.detach().cpu())
-                        ys.append(y.detach().cpu())
-
-                val_y_hats, val_ys = torch.cat(y_hats, dim=0), torch.cat(ys, dim=0)
-
-                metric = self.metrics(val_y_hats, val_ys)
-
-                if best_metric < metric[0][1]:
-                    best_metric = metric[0][1]
-                    self.save_model(
-                        ckpt_dir_path, f"epoch={epoch}_metric={best_metric:.5f}.pt"
+                    self._record_loss_metrics(
+                        epoch,
+                        idx,
+                        loss.detach().cpu(),
+                        metric,
+                        writer,
+                        history_csv_path,
                     )
 
-            self._record_loss_metrics(
-                epoch, loss.detach().cpu(), metric, writer, history_csv_path
-            )
+            if self.lr_scheduler is not None:
+                self.lr_scheduler.step()
 
     def predict(self, dataloader: DataLoader = None, return_y=False):
 
@@ -172,8 +172,34 @@ class Trainer(object):
     def load_model(self):
         return NotImplementedError()
 
+    def _validation(self, ckpt_dir_path, epoch, step, best_metric):
+        if self.valid_dataloader is not None:
+            y_hats = []
+            ys = []
+            self.model.eval()
+            with torch.no_grad():
+                for idx, (x, y) in enumerate(self.valid_dataloader):
+                    if self.cuda:
+                        x, y = x.cuda(), y.cuda()
+                    y_hat = self.model(x)
+                    y_hats.append(y_hat.detach().cpu())
+                    ys.append(y.detach().cpu())
+
+            val_y_hats, val_ys = torch.cat(y_hats, dim=0), torch.cat(ys, dim=0)
+
+            metric = self.metrics(val_y_hats, val_ys)
+
+            if best_metric < metric[0][1]:
+                best_metric = metric[0][1]
+                self.save_model(
+                    ckpt_dir_path,
+                    f"epoch={epoch}_step={step}_metric={best_metric:.5f}.pt",
+                )
+            return metric
+        return None
+
     def _record_loss_metrics(
-        self, epoch, loss=None, metrics=None, writer=None, log_csv_path=None
+        self, epoch, step, loss=None, metrics=None, writer=None, log_csv_path=None
     ):
         now = datetime.datetime.now()
         # write epoch result into csv file
@@ -184,7 +210,7 @@ class Trainer(object):
             with open(log_csv_path, "a+") as file:
                 # write header
                 if is_new_writing:
-                    header = "epoch,"
+                    header = "epoch,step,"
                     if loss is not None:
                         header += "loss,"
                     if metrics is not None:
@@ -194,7 +220,7 @@ class Trainer(object):
                     file.write(header + "\n")
 
                 # write row
-                row = f"{epoch},"
+                row = f"{epoch},{step},"
                 if loss is not None:
                     row += f"{loss},"
                 if metrics is not None:
@@ -209,7 +235,7 @@ class Trainer(object):
                 writer.add_scalar(m[0], m[1], epoch)
 
         # print
-        row = f"Epoch : {epoch} | loss : {loss} |"
+        row = f"Epoch : {epoch} | Step : {step} | loss : {loss : .8f} |"
         for m in metrics:
             row += f" {m[0]} : {m[1] : .6f} |"
         row += f" {now_to_str()} |"

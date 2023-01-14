@@ -68,6 +68,7 @@ def train(args):
         model,
         train_dataloader=train_dataloader,
         valid_dataloader=valid_dataloader,
+        valid_interval=args.validation_interval,
         optimizer_initializer=init_optimizer,
         loss_func=nn.MultiLabelMarginLoss(),
         metric_funcs={"ACC": acc},
@@ -103,6 +104,9 @@ def main():
         type=float,
         help="Ratio of (validset size) / (original train data)",
     )
+    parser.add_argument(
+        "--validation-interval", default=None, type=float, help="Interval of validation"
+    )
     parser.add_argument("--batch-size", default=32, type=int)
     parser.add_argument("--lr", default=0.0005, type=float)
     parser.add_argument(
@@ -121,13 +125,13 @@ def main():
     parser.add_argument(
         "--cuda",
         default=False,
-        action='store_true',
+        action="store_true",
         help="Use cuda or not",
     )
     parser.add_argument(
         "--debug",
         default=False,
-        action='store_true',
+        action="store_true",
         help="Debug mode. In Debug mode, only small set of data is used to test whether program totally runs well.",
     )
 
