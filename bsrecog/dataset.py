@@ -5,11 +5,13 @@ import urllib.request
 from pathlib import Path
 from typing import Union
 
+import albumentations as A
+import cv2
+import numpy as np
 import pandas as pd
 import torch
+from albumentations.pytorch import ToTensorV2
 from torch.utils.data import DataLoader, Dataset, Subset, random_split
-from torchvision import transforms
-from torchvision.io import read_image
 
 STANFORD_BACKGROUND_DATASET_URL = "http://dags.stanford.edu/data/iccv09Data.tar.gz"
 
@@ -51,9 +53,14 @@ class StanfordBackgroundDataset(Dataset):
         )
 
     def __getitem__(self, index):
-        if self.transform:
-            return self.transform(read_image(self.bg_imgs[index])) / 256
-        return read_image(self.bg_imgs[index]) / 255
+        img = cv2.imread(str(self.bg_imgs[index]), cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = img.astype(np.float32)
+        img /= 256
+
+        if self.transform is not None:
+            return self.transform(image=img)["image"]
+        return img
 
     def __len__(self):
         return len(self.bg_imgs)
@@ -95,26 +102,29 @@ class BlockDataset(Dataset):
         return len(self.img_paths)
 
     def __getitem__(self, index):
-        img = read_image(str(self.img_paths[index])) / 256
+        img = cv2.imread(str(self.img_paths[index]), cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = img.astype(np.float32)
+        img /= 256
+
         if self.transform:
-            img = self.transform(img)
+            img = self.transform(image=img)["image"]
         return img, self.y[index, :]
 
 
-class BlendBackgroundTransform:
+class BlendBackgroundTransform(A.ImageOnlyTransform):
     def __init__(self, background_dataset: StanfordBackgroundDataset):
+        super(BlendBackgroundTransform, self).__init__(True, 1)
         self.backgrounds = background_dataset
 
-    def __call__(self, img: torch.Tensor):
+    def apply(self, image, **arg):
         # mask area [(white background) | (black background after rotate)]
-        mask = img.mean(dim=0).gt(0.8) | (img.mean(dim=0) == 0)
+        mask = image.mean(axis=2) > 0.8  # | (image.mean(axis=2) < 0.05)
         ret = self.backgrounds.get_random()
 
-        ret[0, :, :] = torch.where(mask, ret[0, :, :], img[0, :, :])
-        ret[1, :, :] = torch.where(mask, ret[1, :, :], img[1, :, :])
-        ret[2, :, :] = torch.where(mask, ret[2, :, :], img[2, :, :])
-
-        ret = transforms.GaussianBlur(3, 1)(ret)
+        ret[:, :, 0] = np.where(mask, ret[..., 0], image[..., 0])
+        ret[:, :, 1] = np.where(mask, ret[..., 1], image[..., 1])
+        ret[:, :, 2] = np.where(mask, ret[..., 2], image[..., 2])
 
         return ret
 
@@ -128,6 +138,7 @@ def prepare_dataloader(
     background_path="./",
     img_size=(256, 256),
     batch_size=64,
+    tta=0,
     debug=False,
 ):
 
@@ -135,18 +146,33 @@ def prepare_dataloader(
 
     if (train_img_dir_path is not None) and (train_csv_path is not None):
         background_set = StanfordBackgroundDataset(
-            path=background_path, transform=transforms.Resize(img_size)
+            path=background_path,
+            transform=A.Compose(
+                [
+                    A.Resize(img_size[0], img_size[1]),
+                    A.HorizontalFlip(),
+                    A.VerticalFlip(),
+                    A.RandomBrightnessContrast(),
+                    A.RandomResizedCrop(img_size[0], img_size[1]),
+                ]
+            ),
         )
 
         original_train_dataset = BlockDataset(
             directory=train_img_dir_path,
             csv_path=train_csv_path,
-            transform=transforms.Compose(
+            transform=A.Compose(
                 [
-                    transforms.Resize(img_size),
-                    transforms.RandomRotation(degrees=(-30, 30)),
+                    A.Resize(img_size[0], img_size[1]),
+                    A.RandomResizedCrop(
+                        img_size[0], img_size[1], scale=(0.7, 1), ratio=(0.95, 1.05)
+                    ),
                     BlendBackgroundTransform(background_set),
-                    transforms.GaussianBlur(3, 2),
+                    A.MedianBlur(3, always_apply=True, p=1),
+                    A.HorizontalFlip(),
+                    A.RandomBrightnessContrast(),
+                    A.Rotate((-30, 30)),
+                    ToTensorV2(),
                 ],
             ),
         )
@@ -168,15 +194,21 @@ def prepare_dataloader(
 
     # test data
     if test_img_dir_path is not None:
+        test_aug = A.Compose(
+            [
+                A.Resize(img_size[0], img_size[1]),
+                A.MedianBlur(3, always_apply=True, p=1),
+                A.RandomBrightnessContrast(),
+                A.Rotate((-30, 30)),
+                A.RandomResizedCrop(
+                    img_size[0], img_size[1], scale=(0.7, 1), ratio=(0.95, 1.05)
+                ),
+                A.HorizontalFlip(),
+                ToTensorV2(),
+            ]
+        )
         test_dataset = BlockDataset(
-            test_img_dir_path,
-            transform=transforms.Compose(
-                [
-                    transforms.Resize(img_size),
-                    transforms.GaussianBlur(3, 1),
-                    transforms.GaussianBlur(3, 2),
-                ]
-            ),
+            test_img_dir_path, transform=None if tta < 2 else test_aug
         )
         if debug:
             test_dataset = Subset(test_dataset, list(range(batch_size * 2)))
@@ -205,17 +237,34 @@ if __name__ == "__main__":
 
     # seed_everything()
 
-    bg = StanfordBackgroundDataset("./data/bg", transform=transforms.Resize((256, 256)))
+    sz = 256
+
+    bg = StanfordBackgroundDataset(
+        "./data/bg",
+        transform=A.Compose(
+            [
+                A.Resize(sz, sz),
+                A.HorizontalFlip(),
+                A.VerticalFlip(),
+                A.RandomBrightnessContrast(),
+                A.RandomResizedCrop(sz, sz),
+            ]
+        ),
+    )
 
     data = BlockDataset(
         "./data/train",
         "./data/train.csv",
-        transform=transforms.Compose(
+        transform=A.Compose(
             [
-                transforms.Resize((256, 256)),
-                transforms.RandomRotation(degrees=(-30, 30)),
+                A.Resize(sz, sz),
+                A.RandomResizedCrop(sz, sz, scale=(0.7, 1), ratio=(0.95, 1.05)),
                 BlendBackgroundTransform(bg),
-                transforms.GaussianBlur(3, 2),
+                A.MedianBlur(3, always_apply=True, p=1),
+                A.HorizontalFlip(),
+                A.RandomBrightnessContrast(),
+                A.Rotate((-30, 30)),
+                ToTensorV2(),
             ],
         ),
     )
