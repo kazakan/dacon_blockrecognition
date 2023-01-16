@@ -113,8 +113,10 @@ class BlockDataset(Dataset):
 
 
 class BlendBackgroundTransform(A.ImageOnlyTransform):
-    def __init__(self, background_dataset: StanfordBackgroundDataset):
-        super(BlendBackgroundTransform, self).__init__(True, 1)
+    def __init__(
+        self, background_dataset: StanfordBackgroundDataset, always_apply=False, p=0.5
+    ):
+        super(BlendBackgroundTransform, self).__init__(always_apply=always_apply, p=p)
         self.backgrounds = background_dataset
 
     def apply(self, image, **arg):
@@ -167,7 +169,7 @@ def prepare_dataloader(
                     A.RandomResizedCrop(
                         img_size[0], img_size[1], scale=(0.7, 1), ratio=(0.95, 1.05)
                     ),
-                    BlendBackgroundTransform(background_set),
+                    BlendBackgroundTransform(background_set, p=0.7),
                     A.MedianBlur(3, always_apply=True, p=1),
                     A.HorizontalFlip(),
                     A.RandomBrightnessContrast(),
