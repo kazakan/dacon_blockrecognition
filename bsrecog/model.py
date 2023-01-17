@@ -2,14 +2,15 @@ import os
 
 import torch
 import torch.nn as nn
-from torchvision.models import (ConvNeXt_Base_Weights,
+from torchvision.models import (ConvNeXt_Base_Weights,ConvNeXt_Small_Weights,
                                 EfficientNet_V2_M_Weights, ResNet50_Weights,
-                                convnext_base, efficientnet_v2_m, resnet50)
+                                convnext_base,convnext_small, efficientnet_v2_m, resnet50)
 
 MODEL_LIST = [
     "EfficientNetV2_M_Model",
     "ResNet50_Model",
     "ConvNeXt_Base_Model",
+    "ConvNeXt_Small_Model"
     "PR_EfficientNetV2_M_Model",
 ]
 
@@ -60,6 +61,21 @@ class ConvNeXt_Base_Model(nn.Module):
         x = self.sigmoid(x)
         return x
 
+class ConvNeXt_Small_Model(nn.Module):
+    def __init__(self, name="ConvNeXT_Small"):
+        super().__init__()
+
+        self.name = name
+
+        self.base = convnext_small(weights=ConvNeXt_Small_Weights.IMAGENET1K_V1)
+        self.base.classifier[2] = nn.Linear(768, 10, bias=True)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.base(x)
+        x = self.sigmoid(x)
+        return x
+
 
 class PR_EfficientNetV2_M_Model(nn.Module):
     def __init__(self, name="PR_EfficientNetV2_M"):
@@ -93,5 +109,5 @@ def init_optimizer(model: nn.Module):
 
 
 if __name__ == "__main__":
-    m = ConvNeXt_Base_Model("a")
+    m = ConvNeXt_Small_Model("a")
     print(m)
