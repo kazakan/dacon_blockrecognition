@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import torch
 from albumentations.pytorch import ToTensorV2
+from sklearn.model_selection import KFold
 from torch.utils.data import DataLoader, Dataset, Subset, random_split
 
 STANFORD_BACKGROUND_DATASET_URL = "http://dags.stanford.edu/data/iccv09Data.tar.gz"
@@ -137,6 +138,8 @@ def prepare_dataloader(
     train_csv_path=None,
     test_img_dir_path=None,
     valid_set_ratio=0.2,
+    n_splits=0,
+    current_fold=0,
     background_path="./",
     img_size=(256, 256),
     batch_size=64,
@@ -186,13 +189,22 @@ def prepare_dataloader(
             )
 
         # split train, valid
-        if valid_set_ratio > 0:
-            train_dataset, valid_dataset = random_split(
-                original_train_dataset, [1 - valid_set_ratio, valid_set_ratio]
-            )
+        if n_splits > 0:
+            # split_using n_split and current_fold
+            fold = KFold(n_splits=n_splits, shuffle=True)
+            indexes = list(fold.split(original_train_dataset))
+            train_idx, valid_idx = indexes[current_fold]
+            train_dataset = Subset(original_train_dataset, train_idx)
+            valid_dataset = Subset(original_train_dataset, valid_idx)
         else:
-            train_dataset = original_train_dataset
-            valid_dataset = None
+            # split using valid_set_ratio
+            if valid_set_ratio > 0:
+                train_dataset, valid_dataset = random_split(
+                    original_train_dataset, [1 - valid_set_ratio, valid_set_ratio]
+                )
+            else:
+                train_dataset = original_train_dataset
+                valid_dataset = None
 
     # test data
     if test_img_dir_path is not None:

@@ -53,6 +53,8 @@ def train(args):
         train_csv_path=args.csv_path,
         test_img_dir_path=None,
         valid_set_ratio=args.valid_set_ratio,
+        n_splits=args.n_splits,
+        current_fold=args.cur_fold,
         background_path=args.background_path,
         img_size=(256, 256),
         batch_size=args.batch_size,
@@ -104,7 +106,7 @@ def main():
         "--valid-set-ratio",
         default=0.2,
         type=float,
-        help="Ratio of (validset size) / (original train data)",
+        help="Ratio of (validset size) / (original train data). If --n-splits is not 0, --valid-set-ratio is ignored.",
     )
     parser.add_argument(
         "--validation-interval", default=None, type=float, help="Interval of validation"
@@ -118,6 +120,19 @@ def main():
         "--eta-min", default=1e-6, type=float, help="eta_min in CosineAnnealingLr"
     )
     parser.add_argument("--max-epochs", default=100, type=int)
+
+    parser.add_argument(
+        "--n-splits",
+        default=0,
+        type=int,
+        help="Number of folds to split. If 0, split using --valid-set-ratio.",
+    )
+    parser.add_argument(
+        "--cur-fold",
+        default=0,
+        type=int,
+        help="Current fold number to use. If --n-splits is 0, ignored.",
+    )
 
     parser.add_argument("--seed", default=42, type=int)
     parser.add_argument(
