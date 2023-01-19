@@ -18,8 +18,15 @@ def predict(args):
         args.batch_size = 10
         args.max_epochs = 3
 
-    if os.path.isfile(args.model):
-        model = torch.load(args.model)
+    if type(args.model) is list:
+        models = []
+        for path in args.model:
+            if os.path.isfile(path):
+                models.append(torch.load(path))
+            else:
+                raise Exception("Wrong model argument.")
+    elif os.path.isfile(args.model):
+        models = [torch.load(args.model)]
     else:
         raise Exception("Wrong model argument.")
 
@@ -39,28 +46,25 @@ def predict(args):
         debug=args.debug,
     )
 
-    trainer = Trainer(
-        model,
-        test_dataloader=test_dataloader,
-        seed=args.seed,
-        cuda=args.cuda,
-    )
+    results = []
 
-    # post processing
+    for model in models:
+        trainer = Trainer(
+            model,
+            test_dataloader=test_dataloader,
+            seed=args.seed,
+            cuda=args.cuda,
+        )
+
+        for _ in range(args.tta):
+            result = trainer.predict()
+            results.append(result)
+
+    results = torch.stack(results)
+    result = results.mean(dim=0)
+    result = (result >= 0.5).int()
+
     ids = [x.stem for x in sorted(Path(args.img_dir_path).glob("*.jpg"))]
-    if args.tta < 2:
-        # Don't tta
-        result = trainer.predict()
-        result = (result >= 0.5).int()
-    else:
-        # Do tta
-        results = []
-        for i in range(args.tta):
-            a_result = trainer.predict()
-            results.append(a_result)
-        results = torch.stack(results)
-        result = results.mean(dim=0)
-        result = (result >= 0.5).int()
 
     with open(args.submission_file_path, "w") as file:
         file.write("id,A,B,C,D,E,F,G,H,I,J\n")
@@ -73,7 +77,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("model")
+    parser.add_argument("model", nargs="+")
     parser.add_argument("img_dir_path")
     parser.add_argument("submission_file_path")
 
