@@ -41,6 +41,8 @@ def train(args):
             model = ResNet50_Model()
         elif args.model == "ConvNeXt_Base_Model":
             model = ConvNeXt_Base_Model()
+        elif args.model == "ConvNeXt_Small_Model":
+            model = ConvNeXt_Small_Model()
         elif args.model == "PR_EfficientNetV2_M_Model":
             model = PR_EfficientNetV2_M_Model()
     elif os.path.isfile(args.model):

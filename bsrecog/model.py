@@ -11,7 +11,8 @@ MODEL_LIST = [
     "EfficientNetV2_M_Model",
     "ResNet50_Model",
     "ConvNeXt_Base_Model",
-    "ConvNeXt_Small_Model" "PR_EfficientNetV2_M_Model",
+    "ConvNeXt_Small_Model",
+    "PR_EfficientNetV2_M_Model",
 ]
 
 
