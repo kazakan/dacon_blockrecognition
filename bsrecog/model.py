@@ -2,16 +2,16 @@ import os
 
 import torch
 import torch.nn as nn
-from torchvision.models import (ConvNeXt_Base_Weights,ConvNeXt_Small_Weights,
+from torchvision.models import (ConvNeXt_Base_Weights, ConvNeXt_Small_Weights,
                                 EfficientNet_V2_M_Weights, ResNet50_Weights,
-                                convnext_base,convnext_small, efficientnet_v2_m, resnet50)
+                                convnext_base, convnext_small,
+                                efficientnet_v2_m, resnet50)
 
 MODEL_LIST = [
     "EfficientNetV2_M_Model",
     "ResNet50_Model",
     "ConvNeXt_Base_Model",
-    "ConvNeXt_Small_Model"
-    "PR_EfficientNetV2_M_Model",
+    "ConvNeXt_Small_Model" "PR_EfficientNetV2_M_Model",
 ]
 
 
@@ -60,6 +60,7 @@ class ConvNeXt_Base_Model(nn.Module):
         x = self.base(x)
         x = self.sigmoid(x)
         return x
+
 
 class ConvNeXt_Small_Model(nn.Module):
     def __init__(self, name="ConvNeXT_Small"):
