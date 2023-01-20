@@ -172,7 +172,7 @@ def prepare_dataloader(
                     A.RandomResizedCrop(
                         img_size[0], img_size[1], scale=(0.7, 1), ratio=(0.95, 1.05)
                     ),
-                    BlendBackgroundTransform(background_set, p=0.7),
+                    BlendBackgroundTransform(background_set, p=0.9),
                     A.MedianBlur(3, always_apply=True, p=1),
                     A.HorizontalFlip(),
                     A.RandomBrightnessContrast(),
