@@ -104,6 +104,7 @@ class Trainer(object):
 
         for epoch in range(self.max_epoch):
             self.model.train()
+            losses = []
             for idx, (x, y) in enumerate(self.train_dataloader):
                 y = y.float()
                 if self.cuda:
@@ -116,6 +117,8 @@ class Trainer(object):
                 loss.backward()
                 self.optimizer.step()
 
+                losses.append(loss.detach().cpu())
+
                 if (((idx + 1) % self.valid_interval) == 0) or (
                     (idx + 1) == len(self.train_dataloader)
                 ):
@@ -124,7 +127,7 @@ class Trainer(object):
                     self._record_loss_metrics(
                         epoch,
                         idx,
-                        loss.detach().cpu(),
+                        torch.stack(losses).mean(),
                         metric,
                         writer,
                         history_csv_path,
