@@ -37,6 +37,8 @@ def train(args):
     if args.model in MODEL_LIST:
         if args.model == "EfficientNetV2_M_Model":
             model = EfficientNetV2_M_Model()
+        elif args.model == "EfficientNetV2_L_Model":
+            model = EfficientNetV2_L_Model()
         elif args.model == "ResNet50_Model":
             model = ResNet50_Model()
         elif args.model == "ConvNeXt_Base_Model":
