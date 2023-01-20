@@ -35,7 +35,9 @@ def train(args):
         json.dump(vars(args), argfile, indent="\t")
 
     if args.model in MODEL_LIST:
-        if args.model == "EfficientNetV2_M_Model":
+        if args.model == "EfficientNetB0_Model":
+            model = EfficientNetB0_Model()
+        elif args.model == "EfficientNetV2_M_Model":
             model = EfficientNetV2_M_Model()
         elif args.model == "EfficientNetV2_L_Model":
             model = EfficientNetV2_L_Model()
