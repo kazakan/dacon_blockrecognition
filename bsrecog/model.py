@@ -104,12 +104,12 @@ class ConvNeXt_Base_Model(nn.Module):
         )
         self.sigmoid = nn.Sigmoid()
 
-        # for param in self.base.parameters():
-        #     param.requires_grad_(False);
+        for param in self.base.parameters():
+            param.requires_grad_(False)
 
-        # self.base.features[7].requires_grad_(True)
-        # self.base.avgpool.requires_grad_(True)
-        # self.base.classifier.requires_grad_(True)
+        self.base.features[7].requires_grad_(True)
+        self.base.avgpool.requires_grad_(True)
+        self.base.classifier.requires_grad_(True)
 
     def forward(self, x):
         x = self.base(x)
