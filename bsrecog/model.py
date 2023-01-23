@@ -107,6 +107,8 @@ class ConvNeXt_Base_Model(nn.Module):
         for param in self.base.parameters():
             param.requires_grad_(False)
 
+        self.base.features[5].requires_grad_(True)
+        self.base.features[6].requires_grad_(True)
         self.base.features[7].requires_grad_(True)
         self.base.avgpool.requires_grad_(True)
         self.base.classifier.requires_grad_(True)
