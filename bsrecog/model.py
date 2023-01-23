@@ -98,11 +98,22 @@ class ConvNeXt_Base_Model(nn.Module):
         self.base = convnext_base(
             weights=ConvNeXt_Base_Weights.IMAGENET1K_V1 if use_pretrained else None
         )
-        self.base.classifier[2] = nn.Linear(1024, 10, bias=True)
+        self.tail = nn.Sequential(
+            nn.Dropout(),
+            nn.Linear(1000, 10, bias=True),
+        )
         self.sigmoid = nn.Sigmoid()
+
+        # for param in self.base.parameters():
+        #     param.requires_grad_(False);
+
+        # self.base.features[7].requires_grad_(True)
+        # self.base.avgpool.requires_grad_(True)
+        # self.base.classifier.requires_grad_(True)
 
     def forward(self, x):
         x = self.base(x)
+        x = self.tail(x)
         x = self.sigmoid(x)
         return x
 
@@ -159,5 +170,5 @@ def init_optimizer(model: nn.Module):
 
 
 if __name__ == "__main__":
-    m = EfficientNetB0_Model("a")
+    m = ConvNeXt_Base_Model("a")
     print(m)
