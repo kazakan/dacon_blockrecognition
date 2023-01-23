@@ -36,19 +36,19 @@ def train(args):
 
     if args.model in MODEL_LIST:
         if args.model == "EfficientNetB0_Model":
-            model = EfficientNetB0_Model()
+            model = EfficientNetB0_Model(use_pretrained=args.use_pretrained)
         elif args.model == "EfficientNetV2_M_Model":
-            model = EfficientNetV2_M_Model()
+            model = EfficientNetV2_M_Model(use_pretrained=args.use_pretrained)
         elif args.model == "EfficientNetV2_L_Model":
-            model = EfficientNetV2_L_Model()
+            model = EfficientNetV2_L_Model(use_pretrained=args.use_pretrained)
         elif args.model == "ResNet50_Model":
-            model = ResNet50_Model()
+            model = ResNet50_Model(use_pretrained=args.use_pretrained)
         elif args.model == "ConvNeXt_Base_Model":
-            model = ConvNeXt_Base_Model()
+            model = ConvNeXt_Base_Model(use_pretrained=args.use_pretrained)
         elif args.model == "ConvNeXt_Small_Model":
-            model = ConvNeXt_Small_Model()
+            model = ConvNeXt_Small_Model(use_pretrained=args.use_pretrained)
         elif args.model == "PR_EfficientNetV2_M_Model":
-            model = PR_EfficientNetV2_M_Model()
+            model = PR_EfficientNetV2_M_Model(use_pretrained=args.use_pretrained)
     elif os.path.isfile(args.model):
         model = torch.load(args.model)
     else:
@@ -106,6 +106,13 @@ def main():
     )
     parser.add_argument(
         "--ckpt-root-path", default="./ckpts", help="Path to save checkpoint folder"
+    )
+
+    parser.add_argument(
+        "--use-pretrained",
+        default=False,
+        action="store_true",
+        help="Choose to use pretrained weight using imagenet.",
     )
 
     parser.add_argument(

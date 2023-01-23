@@ -21,11 +21,13 @@ MODEL_LIST = [
 
 
 class EfficientNetB0_Model(nn.Module):
-    def __init__(self, name="EfficientNetB0"):
+    def __init__(self, name="EfficientNetB0", use_pretrained=False):
         super().__init__()
 
         self.name = name
-        self.base = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
+        self.base = efficientnet_b0(
+            weights=EfficientNet_B0_Weights.IMAGENET1K_V1 if use_pretrained else None
+        )
         self.base.classifier[1] = nn.Linear(1280, 10, bias=True)
         self.sigmoid = nn.Sigmoid()
 
@@ -36,11 +38,13 @@ class EfficientNetB0_Model(nn.Module):
 
 
 class EfficientNetV2_M_Model(nn.Module):
-    def __init__(self, name="EfficientNetV2_M"):
+    def __init__(self, name="EfficientNetV2_M", use_pretrained=False):
         super().__init__()
 
         self.name = name
-        self.base = efficientnet_v2_m(weights=EfficientNet_V2_M_Weights.IMAGENET1K_V1)
+        self.base = efficientnet_v2_m(
+            weights=EfficientNet_V2_M_Weights.IMAGENET1K_V1 if use_pretrained else None
+        )
         self.base.classifier[1] = nn.Linear(1280, 10, bias=True)
         self.sigmoid = nn.Sigmoid()
 
@@ -51,11 +55,13 @@ class EfficientNetV2_M_Model(nn.Module):
 
 
 class EfficientNetV2_L_Model(nn.Module):
-    def __init__(self, name="EfficientNetV2_L"):
+    def __init__(self, name="EfficientNetV2_L", use_pretrained=False):
         super().__init__()
 
         self.name = name
-        self.base = efficientnet_v2_l(weights=EfficientNet_V2_L_Weights.IMAGENET1K_V1)
+        self.base = efficientnet_v2_l(
+            weights=EfficientNet_V2_L_Weights.IMAGENET1K_V1 if use_pretrained else None
+        )
         self.base.classifier[1] = nn.Linear(1280, 10, bias=True)
         self.sigmoid = nn.Sigmoid()
 
@@ -66,12 +72,14 @@ class EfficientNetV2_L_Model(nn.Module):
 
 
 class ResNet50_Model(nn.Module):
-    def __init__(self, name="ResNet50"):
+    def __init__(self, name="ResNet50", use_pretrained=False):
         super().__init__()
 
         self.name = name
 
-        self.base = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+        self.base = resnet50(
+            weights=ResNet50_Weights.IMAGENET1K_V2 if use_pretrained else None
+        )
         self.base.fc = nn.Linear(2048, 10, bias=True)
         self.sigmoid = nn.Sigmoid()
 
@@ -82,12 +90,14 @@ class ResNet50_Model(nn.Module):
 
 
 class ConvNeXt_Base_Model(nn.Module):
-    def __init__(self, name="ConvNeXT_Base"):
+    def __init__(self, name="ConvNeXT_Base", use_pretrained=False):
         super().__init__()
 
         self.name = name
 
-        self.base = convnext_base(weights=ConvNeXt_Base_Weights.IMAGENET1K_V1)
+        self.base = convnext_base(
+            weights=ConvNeXt_Base_Weights.IMAGENET1K_V1 if use_pretrained else None
+        )
         self.base.classifier[2] = nn.Linear(1024, 10, bias=True)
         self.sigmoid = nn.Sigmoid()
 
@@ -98,12 +108,14 @@ class ConvNeXt_Base_Model(nn.Module):
 
 
 class ConvNeXt_Small_Model(nn.Module):
-    def __init__(self, name="ConvNeXT_Small"):
+    def __init__(self, name="ConvNeXT_Small", use_pretrained=False):
         super().__init__()
 
         self.name = name
 
-        self.base = convnext_small(weights=ConvNeXt_Small_Weights.IMAGENET1K_V1)
+        self.base = convnext_small(
+            weights=ConvNeXt_Small_Weights.IMAGENET1K_V1 if use_pretrained else None
+        )
         self.base.classifier[2] = nn.Linear(768, 10, bias=True)
         self.sigmoid = nn.Sigmoid()
 
@@ -114,12 +126,14 @@ class ConvNeXt_Small_Model(nn.Module):
 
 
 class PR_EfficientNetV2_M_Model(nn.Module):
-    def __init__(self, name="PR_EfficientNetV2_M"):
+    def __init__(self, name="PR_EfficientNetV2_M", use_pretrained=False):
         super().__init__()
 
         self.name = name
 
-        self.base = efficientnet_v2_m(weights=EfficientNet_V2_M_Weights.IMAGENET1K_V1)
+        self.base = efficientnet_v2_m(
+            weights=EfficientNet_V2_M_Weights.IMAGENET1K_V1 if use_pretrained else None
+        )
         self.base.classifier[1] = nn.Linear(1280, 10, bias=True)
         self.sigmoid = nn.Sigmoid()
 
