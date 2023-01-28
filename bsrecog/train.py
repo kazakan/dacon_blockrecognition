@@ -62,7 +62,7 @@ def train(args):
         n_splits=args.n_splits,
         current_fold=args.cur_fold,
         background_path=args.background_path,
-        img_size=(256, 256),
+        img_size=(args.img_size, args.img_size),
         batch_size=args.batch_size,
         debug=args.debug,
     )
@@ -125,6 +125,7 @@ def main():
         "--validation-interval", default=None, type=float, help="Interval of validation"
     )
     parser.add_argument("--batch-size", default=32, type=int)
+    parser.add_argument("--img-size", default=256,type=int)
     parser.add_argument("--lr", default=0.0005, type=float)
     parser.add_argument(
         "--t-max", default=50, type=int, help="T_max in CosineAnnealingLr"

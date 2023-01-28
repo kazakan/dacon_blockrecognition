@@ -40,7 +40,7 @@ def predict(args):
 
     _, _, test_dataloader = prepare_dataloader(
         test_img_dir_path=args.img_dir_path,
-        img_size=(256, 256),
+        img_size=(args.img_size, args.img_size),
         batch_size=args.batch_size,
         tta=args.tta,
         debug=args.debug,
@@ -82,6 +82,7 @@ def main():
     parser.add_argument("submission_file_path")
 
     parser.add_argument("--batch-size", default=32, type=int)
+    parser.add_argument("--img-size", default=256,type=int)
 
     parser.add_argument("--seed", default=42, type=int)
     parser.add_argument("--tta", default=1, type=int)
