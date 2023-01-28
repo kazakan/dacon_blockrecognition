@@ -44,7 +44,7 @@ def train(args):
         elif args.model == "ResNet50_Model":
             model = ResNet50_Model(use_pretrained=args.use_pretrained)
         elif args.model == "ConvNeXt_Base_Model":
-            model = ConvNeXt_Base_Model(use_pretrained=args.use_pretrained)
+            model = ConvNeXt_Base_Model(use_pretrained=args.use_pretrained, freeze=args.freeze)
         elif args.model == "ConvNeXt_Small_Model":
             model = ConvNeXt_Small_Model(use_pretrained=args.use_pretrained)
         elif args.model == "PR_EfficientNetV2_M_Model":
@@ -113,6 +113,12 @@ def main():
         default=False,
         action="store_true",
         help="Choose to use pretrained weight using imagenet.",
+    )
+    parser.add_argument(
+        "--freeze",
+        default=False,
+        action="store_true",
+        help="Choose to freeze some layers in supported pretrained model.",
     )
 
     parser.add_argument(
