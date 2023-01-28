@@ -66,6 +66,10 @@ class Trainer(object):
         # init optimizer
         self.optimizer, self.lr_scheduler = self.optimizer_initializer(self.model)
 
+        # init grad scaler
+        if self.cuda:
+            scaler = torch.cuda.amp.GradScaler()
+
         # check optimizer is available
         if self.optimizer is None:
             raise Exception(
@@ -117,8 +121,13 @@ class Trainer(object):
                     y_hat = self.model(x)
                     loss = self.lossfunc(y_hat, y)
 
-                loss.backward()
-                self.optimizer.step()
+                if self.cuda():
+                    scaler.scale(loss).backward()
+                    scaler.step(self.optimizer)
+                    scaler.update()
+                else :
+                    loss.backward()
+                    self.optimizer.step()
 
                 losses.append(loss.detach().cpu())
 
