@@ -158,6 +158,7 @@ class Trainer(object):
                 if self.cuda:
                     x, y = x.cuda(), y.cuda()
                 y_hat = self.model(x)
+                y_hat = nn.functional.sigmoid(y_hat)
                 y_hats.append(y_hat.detach().cpu())
 
                 if return_y:
@@ -191,7 +192,7 @@ class Trainer(object):
                     if self.cuda:
                         x, y = x.cuda(), y.cuda()
                     y_hat = self.model(x)
-                    y_hats.append(y_hat)
+                    y_hats.append(nn.functional.sigmoid(y_hat))
                     ys.append(y)
 
             val_y_hats, val_ys = torch.cat(y_hats, dim=0), torch.cat(ys, dim=0)
