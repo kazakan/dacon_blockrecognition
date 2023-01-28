@@ -110,7 +110,7 @@ class Trainer(object):
                 self.optimizer.zero_grad()
                 y = y.float()
 
-                with torch.autocast():
+                with torch.autocast("cuda" if self.cuda else "cpu"):
                     y_hat = self.model(x)
                     loss = self.lossfunc(y_hat, y)
 
