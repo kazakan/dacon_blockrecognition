@@ -106,13 +106,13 @@ class Trainer(object):
             self.model.train()
             losses = []
             for idx, (x, y) in enumerate(self.train_dataloader):
-                y = y.float()
-                if self.cuda:
-                    x, y = x.cuda(), y.cuda()
+                
                 self.optimizer.zero_grad()
+                y = y.float()
 
-                y_hat = self.model(x)
-                loss = self.lossfunc(y_hat, y)
+                with torch.autocast():
+                    y_hat = self.model(x)
+                    loss = self.lossfunc(y_hat, y)
 
                 loss.backward()
                 self.optimizer.step()
