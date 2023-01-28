@@ -108,7 +108,7 @@ class Trainer(object):
             for idx, (x, y) in enumerate(self.train_dataloader):
                 
                 self.optimizer.zero_grad()
-                # y = y.float()
+                y = y.float()
                 
                 if self.cuda:
                     x, y = x.cuda(), y.cuda()
