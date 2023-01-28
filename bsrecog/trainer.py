@@ -121,7 +121,7 @@ class Trainer(object):
                     y_hat = self.model(x)
                     loss = self.lossfunc(y_hat, y)
 
-                if self.cuda():
+                if self.cuda:
                     scaler.scale(loss).backward()
                     scaler.step(self.optimizer)
                     scaler.update()
