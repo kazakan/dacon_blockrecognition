@@ -44,7 +44,9 @@ def train(args):
         elif args.model == "ResNet50_Model":
             model = ResNet50_Model(use_pretrained=args.use_pretrained)
         elif args.model == "ConvNeXt_Base_Model":
-            model = ConvNeXt_Base_Model(use_pretrained=args.use_pretrained, freeze=args.freeze)
+            model = ConvNeXt_Base_Model(
+                use_pretrained=args.use_pretrained, freeze=args.freeze
+            )
         elif args.model == "ConvNeXt_Small_Model":
             model = ConvNeXt_Small_Model(use_pretrained=args.use_pretrained)
         elif args.model == "PR_EfficientNetV2_M_Model":
@@ -131,7 +133,7 @@ def main():
         "--validation-interval", default=None, type=float, help="Interval of validation"
     )
     parser.add_argument("--batch-size", default=32, type=int)
-    parser.add_argument("--img-size", default=256,type=int)
+    parser.add_argument("--img-size", default=256, type=int)
     parser.add_argument("--lr", default=0.0005, type=float)
     parser.add_argument(
         "--t-max", default=50, type=int, help="T_max in CosineAnnealingLr"

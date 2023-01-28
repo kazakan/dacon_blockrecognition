@@ -110,10 +110,10 @@ class Trainer(object):
             self.model.train()
             losses = []
             for idx, (x, y) in enumerate(self.train_dataloader):
-                
+
                 self.optimizer.zero_grad()
                 y = y.float()
-                
+
                 if self.cuda:
                     x, y = x.cuda(), y.cuda()
 
@@ -125,7 +125,7 @@ class Trainer(object):
                     scaler.scale(loss).backward()
                     scaler.step(self.optimizer)
                     scaler.update()
-                else :
+                else:
                     loss.backward()
                     self.optimizer.step()
 

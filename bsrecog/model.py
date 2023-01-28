@@ -82,7 +82,7 @@ class ResNet50_Model(nn.Module):
 
 
 class ConvNeXt_Base_Model(nn.Module):
-    def __init__(self, name="ConvNeXT_Base", use_pretrained=False, freeze = False):
+    def __init__(self, name="ConvNeXT_Base", use_pretrained=False, freeze=False):
         super().__init__()
 
         self.name = name
@@ -95,7 +95,7 @@ class ConvNeXt_Base_Model(nn.Module):
             nn.Linear(1000, 10, bias=True),
         )
 
-        if freeze :
+        if freeze:
             for param in self.base.parameters():
                 param.requires_grad_(False)
 

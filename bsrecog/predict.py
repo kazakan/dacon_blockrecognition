@@ -82,7 +82,7 @@ def main():
     parser.add_argument("submission_file_path")
 
     parser.add_argument("--batch-size", default=32, type=int)
-    parser.add_argument("--img-size", default=256,type=int)
+    parser.add_argument("--img-size", default=256, type=int)
 
     parser.add_argument("--seed", default=42, type=int)
     parser.add_argument("--tta", default=1, type=int)
