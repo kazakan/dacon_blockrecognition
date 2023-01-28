@@ -29,11 +29,9 @@ class EfficientNetB0_Model(nn.Module):
             weights=EfficientNet_B0_Weights.IMAGENET1K_V1 if use_pretrained else None
         )
         self.base.classifier[1] = nn.Linear(1280, 10, bias=True)
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.base(x)
-        x = self.sigmoid(x)
         return x
 
 
@@ -46,11 +44,9 @@ class EfficientNetV2_M_Model(nn.Module):
             weights=EfficientNet_V2_M_Weights.IMAGENET1K_V1 if use_pretrained else None
         )
         self.base.classifier[1] = nn.Linear(1280, 10, bias=True)
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.base(x)
-        x = self.sigmoid(x)
         return x
 
 
@@ -63,11 +59,9 @@ class EfficientNetV2_L_Model(nn.Module):
             weights=EfficientNet_V2_L_Weights.IMAGENET1K_V1 if use_pretrained else None
         )
         self.base.classifier[1] = nn.Linear(1280, 10, bias=True)
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.base(x)
-        x = self.sigmoid(x)
         return x
 
 
@@ -81,11 +75,9 @@ class ResNet50_Model(nn.Module):
             weights=ResNet50_Weights.IMAGENET1K_V2 if use_pretrained else None
         )
         self.base.fc = nn.Linear(2048, 10, bias=True)
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.base(x)
-        x = self.sigmoid(x)
         return x
 
 
@@ -102,12 +94,11 @@ class ConvNeXt_Base_Model(nn.Module):
             nn.Dropout(),
             nn.Linear(1000, 10, bias=True),
         )
-        self.sigmoid = nn.Sigmoid()
 
         if freeze :
             for param in self.base.parameters():
                 param.requires_grad_(False)
-    
+
             self.base.features[5].requires_grad_(True)
             self.base.features[6].requires_grad_(True)
             self.base.features[7].requires_grad_(True)
@@ -117,7 +108,6 @@ class ConvNeXt_Base_Model(nn.Module):
     def forward(self, x):
         x = self.base(x)
         x = self.tail(x)
-        x = self.sigmoid(x)
         return x
 
 
@@ -131,11 +121,9 @@ class ConvNeXt_Small_Model(nn.Module):
             weights=ConvNeXt_Small_Weights.IMAGENET1K_V1 if use_pretrained else None
         )
         self.base.classifier[2] = nn.Linear(768, 10, bias=True)
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.base(x)
-        x = self.sigmoid(x)
         return x
 
 
@@ -149,7 +137,6 @@ class PR_EfficientNetV2_M_Model(nn.Module):
             weights=EfficientNet_V2_M_Weights.IMAGENET1K_V1 if use_pretrained else None
         )
         self.base.classifier[1] = nn.Linear(1280, 10, bias=True)
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         raise NotImplementedError()

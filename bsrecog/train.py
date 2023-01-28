@@ -80,7 +80,7 @@ def train(args):
         valid_dataloader=valid_dataloader,
         valid_interval=args.validation_interval,
         optimizer_initializer=init_optimizer,
-        loss_func=nn.BCELoss(),
+        loss_func=nn.BCEWithLogitsLoss(),
         metric_funcs={"ACC": acc},
         max_epochs=args.max_epochs,
         model_ckpt_root_path=args.ckpt_root_path,
